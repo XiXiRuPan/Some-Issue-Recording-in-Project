@@ -1,0 +1,35 @@
+1. Today I trained a cnn-based model with the data of AISHELL-2 with adding  four times noisy,my dataloader is writen bellow:
+   def deletSilence(self,featark,vadark):
+        mat = kaldi_io.read_mat(featark)
+        vad = kaldi_io.read_vec_flt(vadark)
+
+        assert mat.shape[0] == vad.shape[0]
+
+        vad = vad.reshape([vad.shape[0],1])
+        vad = np.broadcast_to(vad,(vad.shape[0],mat.shape[1]))
+        assert mat.shape == vad.shape
+        mat = mat * vad
+        mat = mat[~(mat==0).all(1)]
+        return mat
+
+   def __getitem__(self, i):
+        #spkid
+        label   = int(self.feats[i].split()[0])
+        #feat arkpath
+        arkpath = self.feats[i].split()[1]
+        # vad arkpath
+        vadpath = self.feats[i].split()[2]
+        mat = self.deletSilence(arkpath,vadpath)
+        mat_size = mat.shape
+        orig_mat = mat
+        while mat_size[0] < self.resize_width:
+
+              mat = np.concatenate((mat,orig_mat),axis = 0)
+              ####important
+              mat_size =mat.shape
+              .........
+              
+Maybe because of some compliate or eat too lot of memory operates make the GPU stuck without any computing or information
+When I delete the operate of DeleteSilence. The program becomes ok.
+
+My solution is using deletSilence() method dealing with the feats.ark before sending into the Dataloader subclass's getItem() method.
